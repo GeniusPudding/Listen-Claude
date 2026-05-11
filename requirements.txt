@@ -1,0 +1,4 @@
+python-dotenv>=1.0
+
+# Optional, only required when TTS_ENGINE=piper:
+# piper-tts>=1.2
