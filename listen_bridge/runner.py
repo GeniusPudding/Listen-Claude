@@ -24,8 +24,11 @@ def main() -> int:
     if not config.is_enabled():
         return 0
 
+    raw = sys.stdin.read()
     try:
-        payload = json.load(sys.stdin)
+        # strict=False allows raw control characters (Claude Code's transcript
+        # JSON sometimes contains them inside string values).
+        payload = json.loads(raw, strict=False)
     except Exception as e:
         _log(f"failed to parse hook stdin: {e}")
         return 0
