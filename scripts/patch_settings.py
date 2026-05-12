@@ -76,8 +76,10 @@ def main() -> None:
     if mode == "install":
         platform, repo_dir = argv[2], argv[3]
         cmd = build_command(platform, repo_dir)
+        # 300s lets several queued hooks wait their turn without being
+        # killed (each hook holds its slot via the lock).
         hooks["Stop"].append({
-            "hooks": [{"type": "command", "command": cmd, "timeout": 30}],
+            "hooks": [{"type": "command", "command": cmd, "timeout": 300}],
         })
 
     if not hooks["Stop"]:

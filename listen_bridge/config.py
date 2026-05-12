@@ -40,6 +40,17 @@ TTS_RATE = int(os.getenv("TTS_RATE", "200"))
 # Master switch — set to "0" to disable TTS without uninstalling.
 TTS_ENABLED = os.getenv("TTS_ENABLED", "1") == "1"
 
+# Prepend the project / window name (e.g. "Kaikou-Claude:") before the
+# spoken text so you know which background window is talking. Useful when
+# multiple Claude sessions are open. Set to 0 to disable.
+ANNOUNCE_PROJECT = os.getenv("ANNOUNCE_PROJECT", "1") == "1"
+
+# Path of a lock file used to skip TTS when another instance is already
+# speaking — avoids overlapping audio when multiple Claude windows finish
+# at roughly the same time.
+LOCK_PATH = os.path.join(tempfile.gettempdir(), "listen-claude.lock")
+LOCK_STALE_SEC = float(os.getenv("LOCK_STALE_SEC", "60"))
+
 # Runtime toggle marker — if this file exists, TTS is disabled regardless
 # of TTS_ENABLED. Created/removed by scripts/toggle.{ps1,sh} for fast on/off
 # without editing .env.
