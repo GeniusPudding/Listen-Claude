@@ -76,14 +76,32 @@ TTS_ENGINE=system
 TTS_VOICE=Mei-Jia
 ```
 
-### Engine 3: Piper (free, local, requires manual download)
+### Engine 3: Piper (free, local, neural quality)
 
-1. `pip install piper-tts` inside the venv.
-2. Download a voice from [Piper samples](https://rhasspy.github.io/piper-samples/), put `.onnx` + `.onnx.json` in `~/.cache/piper-voices/`. Recommended: `zh_CN-huayan-medium`.
-3. ```
-   TTS_ENGINE=piper
-   TTS_VOICE=zh_CN-huayan-medium
-   ```
+Recommended for offline use with neural-quality voices.
+
+**Option A — download during install** (one-shot):
+```bash
+# Windows
+$env:PIPER_VOICE='zh_CN-huayan-medium'; .\install.ps1
+
+# macOS / Linux
+PIPER_VOICE=zh_CN-huayan-medium ./install.sh
+```
+
+**Option B — install voice after the fact:**
+```bash
+.\scripts\install-piper-voice.ps1 zh_CN-huayan-medium       # Windows
+bash scripts/install-piper-voice.sh zh_CN-huayan-medium     # macOS / Linux
+```
+
+Then switch:
+```bash
+.\scripts\set-voice.ps1 zh_CN-huayan-medium piper     # Windows
+bash scripts/set-voice.sh zh_CN-huayan-medium piper   # macOS / Linux
+```
+
+Audition voices: [Piper samples](https://rhasspy.github.io/piper-samples/). Full catalog: https://huggingface.co/rhasspy/piper-voices/tree/main.
 
 ### Engine 4: ElevenLabs (cloud, paid, premium quality)
 

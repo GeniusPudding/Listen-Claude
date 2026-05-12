@@ -14,6 +14,7 @@ ListenClaude's read-aloud uses one of four engines: **edge** (free Microsoft neu
 | "list edge voices" / "Chinese voices" | Run `edge-tts --list-voices` (filter `zh` or `en`). |
 | "list system voices" / "macOS voices" / "SAPI voices" | List built-in OS voices (see below). |
 | "list piper voices" | List `.onnx` files under PIPER_VOICES_DIR. Direct user to https://rhasspy.github.io/piper-samples/ for downloads. |
+| "download piper voice <name>" / "install piper voice <name>" | Run `install-piper-voice.{ps1,sh} <name>` to fetch from HuggingFace into PIPER_VOICES_DIR. |
 | "browse ElevenLabs" | Tell user to open https://elevenlabs.io/app/voice-library, audition, and copy a voice_id. |
 | "list my ElevenLabs voices" | Call ElevenLabs API (`/v1/voices`). Requires `ELEVENLABS_API_KEY` in `.env`. |
 | "use voice <id>" / "switch to <id>" | Run `set-voice.{ps1,sh}`. Auto-detect engine from format. |

@@ -67,6 +67,14 @@ function Install-Skill($templateRel, $skillName) {
 Install-Skill 'skill\SKILL.md.template'         'listen'
 Install-Skill 'skill\CHOOSE_VOICE.md.template'  'choose-voice'
 
+# 6. Optional: download a Piper voice if PIPER_VOICE env var is set.
+#    Example: $env:PIPER_VOICE='zh_CN-huayan-medium'; .\install.ps1
+if ($env:PIPER_VOICE) {
+    Write-Host "Installing Piper TTS package and voice $env:PIPER_VOICE..."
+    & $venvPython -m pip install piper-tts 2>&1 | Out-Null
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repoDir 'scripts\install-piper-voice.ps1') $env:PIPER_VOICE
+}
+
 Write-Host ''
 Write-Host '=== Done ==='
 Write-Host 'Open a new Claude Code session. After Claude responds you should hear it.'

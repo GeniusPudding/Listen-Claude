@@ -61,6 +61,15 @@ install_skill() {
 install_skill "$repo_dir/skill/SKILL.md.template"        "listen"
 install_skill "$repo_dir/skill/CHOOSE_VOICE.md.template" "choose-voice"
 
+# 6. Optional: download a Piper voice if PIPER_VOICE env var is set.
+# Example: PIPER_VOICE=zh_CN-huayan-medium ./install.sh
+if [[ -n "${PIPER_VOICE:-}" ]]; then
+    echo "Installing Piper TTS package and voice $PIPER_VOICE..."
+    "$venv_python" -m pip install piper-tts >/dev/null 2>&1
+    chmod +x "$repo_dir/scripts/install-piper-voice.sh" 2>/dev/null || true
+    bash "$repo_dir/scripts/install-piper-voice.sh" "$PIPER_VOICE"
+fi
+
 echo
 echo "=== Done ==="
 echo "Open a new Claude Code session. After Claude responds you should hear it."

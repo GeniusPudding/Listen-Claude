@@ -76,14 +76,32 @@ TTS_ENGINE=system
 TTS_VOICE=Mei-Jia
 ```
 
-### 引擎 3: Piper（免費,本地,要手動下載）
+### 引擎 3: Piper（免費,本地,神經網路品質）
 
-1. venv 裡 `pip install piper-tts`
-2. 到 [Piper 試聽頁面](https://rhasspy.github.io/piper-samples/) 線上試聽下載,`.onnx` + `.onnx.json` 放到 `~/.cache/piper-voices/`。中文推薦 `zh_CN-huayan-medium`。
-3. ```
-   TTS_ENGINE=piper
-   TTS_VOICE=zh_CN-huayan-medium
-   ```
+適合離線使用,品質僅次於 Edge TTS / ElevenLabs。
+
+**方案 A — 安裝時順便下載**（一次搞定）：
+```bash
+# Windows
+$env:PIPER_VOICE='zh_CN-huayan-medium'; .\install.ps1
+
+# macOS / Linux
+PIPER_VOICE=zh_CN-huayan-medium ./install.sh
+```
+
+**方案 B — 事後下載：**
+```bash
+.\scripts\install-piper-voice.ps1 zh_CN-huayan-medium       # Windows
+bash scripts/install-piper-voice.sh zh_CN-huayan-medium     # macOS / Linux
+```
+
+下載完切換引擎：
+```bash
+.\scripts\set-voice.ps1 zh_CN-huayan-medium piper     # Windows
+bash scripts/set-voice.sh zh_CN-huayan-medium piper   # macOS / Linux
+```
+
+線上試聽：[Piper samples](https://rhasspy.github.io/piper-samples/)。完整清單：https://huggingface.co/rhasspy/piper-voices/tree/main
 
 ### 引擎 4: ElevenLabs（雲端,付費,頂級品質）
 
