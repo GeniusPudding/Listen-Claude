@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install ListenClaude on macOS / Linux: create venv, install deps,
+# Install Listen-Claude on macOS / Linux: create venv, install deps,
 # register Claude Code Stop hook, install /listen + /choose-voice skills.
 # Safe to re-run (idempotent).
 
@@ -15,7 +15,7 @@ env_file="$repo_dir/.env"
 uname_s="$(uname -s)"
 
 echo
-echo "=== ListenClaude install ==="
+echo "=== Listen-Claude install ==="
 echo "Location: $repo_dir"
 echo "Platform: $uname_s"
 

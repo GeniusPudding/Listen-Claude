@@ -1,18 +1,18 @@
 [English](README.md) · [繁體中文](README.zh-TW.md)
 
-# ListenClaude（聽聲即克）
+# Listen-Claude（聽聲即克）
 
-Hear Claude Code's responses as audio. Triggered automatically when Claude finishes responding — a parallel input channel that lets you *read and listen at the same time* to expand human-AI bandwidth.
+Hear Claude Code's responses as audio. Triggered automatically when Claude finishes responding — a parallel input channel that lets you *read and listen at the same time* to expand human–AI bandwidth.
 
 Companion to [Kaikou-Claude](https://github.com/GeniusPudding/Kaikou-Claude) (voice → Claude). This project is Claude → voice.
 
 ## Features
 
 - **Auto-triggered** by Claude Code's `Stop` hook — zero manual interaction.
-- **Local first** — uses your OS built-in TTS by default (macOS `say`, Windows SAPI, Linux `spd-say`).
-- **Pluggable engine** — drop in [Piper TTS](https://github.com/rhasspy/piper) for higher-quality offline voices.
-- **Configurable reading mode** — full text, first paragraph only, or heuristic summary.
+- **Four TTS engines** — free neural (Edge), OS built-in, fully offline (Piper), or premium cloud (ElevenLabs).
+- **Runtime mode switch** — flip between brief and detailed spoken replies via `/listen <mode>`.
 - **Skip-short threshold** — won't read trivial "ok" responses.
+- **Queue for concurrent windows** — multiple Claude sessions don't overlap audio.
 
 ## Platform support
 
@@ -27,8 +27,8 @@ Companion to [Kaikou-Claude](https://github.com/GeniusPudding/Kaikou-Claude) (vo
 One command on every platform (clone + run install):
 
 ```bash
-git clone https://github.com/GeniusPudding/ListenClaude.git
-cd ListenClaude
+git clone https://github.com/GeniusPudding/Listen-Claude.git
+cd Listen-Claude
 .\install.ps1   # Windows
 ./install.sh    # macOS / Linux
 ```
@@ -43,135 +43,104 @@ The installer:
 
 Idempotent — re-run any time to upgrade or repair.
 
-## Choosing a voice
+## Usage
 
-The easiest way is the `/choose-voice` skill — just describe what you want in any Claude session:
+### Control — `/listen` skill
+
+One skill controls both on/off and reading length. All changes take effect on the next Claude response; no restart.
+
+**On/off:**
 
 ```
-/choose-voice                                 → list options
+/listen           → toggle current state
+/listen on        → enable
+/listen off       → disable
+/listen status    → report state
+```
+
+**Reading mode** (brief ↔ detailed, switch any time):
+
+```
+/listen brief     → opening paragraph only
+/listen progress  → opening + first ~4 bullets (default)
+/listen summary   → first sentence per paragraph + headings
+/listen detailed  → full response
+/listen mode      → report current mode
+```
+
+Equivalent script (skill calls this under the hood):
+
+```bash
+.\scripts\toggle.ps1  <arg>   # Windows
+bash scripts/toggle.sh <arg>  # macOS / Linux
+```
+
+On/off uses a marker file (`$TMPDIR/listen-claude.disabled`); modes are written to `.env`.
+
+### Choosing a voice — `/choose-voice` skill
+
+```
+/choose-voice                            → list options
 /choose-voice list edge Chinese voices
 /choose-voice use zh-TW-HsiaoChenNeural
 /choose-voice what voice am I using
 ```
 
-### Engine 1: Edge TTS (default, free, high quality)
+The skill autodetects the engine from the voice ID format (`zh-TW-…Neural` → Edge, `zh_CN-…` → Piper, 20-char alphanumeric → ElevenLabs, anything else → system).
 
-[Microsoft Edge's neural voices](https://learn.microsoft.com/azure/ai-services/speech-service/language-support), free, no API key. Auto-installed.
+#### Engines at a glance
 
-Popular Chinese voices:
-- `zh-TW-HsiaoChenNeural` — TW female, warm (default)
-- `zh-TW-YunJheNeural` — TW male
-- `zh-CN-XiaoxiaoNeural` — CN female, very popular
-- `zh-CN-YunyangNeural` — CN male, broadcaster
-- `yue-HK-WanLungNeural` — Cantonese male
+| Engine | Cost | Quality | Setup | Pick when |
+|--------|------|---------|-------|-----------|
+| **`edge`** (default) | Free | High (neural) | Automatic | Best default — start here |
+| `system` | Free | Basic | None | No network egress, smallest footprint |
+| `piper` | Free | High (neural) | Manual model download | Fully offline / air-gapped |
+| `elevenlabs` | Paid | Top | API key | Studio-grade voice quality |
 
-Full list: `.venv/bin/edge-tts --list-voices | grep zh`.
+**Edge TTS** — popular Chinese voices: `zh-TW-HsiaoChenNeural` (TW female, default), `zh-TW-YunJheNeural` (TW male), `zh-CN-XiaoxiaoNeural` (CN female), `yue-HK-WanLungNeural` (Cantonese). Full list: `.venv/bin/edge-tts --list-voices`.
 
-```
-TTS_ENGINE=edge
-TTS_VOICE=zh-TW-HsiaoChenNeural
-```
+**System TTS** — `Mei-Jia` (macOS TW), `Tingting` (macOS CN), `Microsoft Yating Desktop` (Win TW). Set `TTS_ENGINE=system`.
 
-### Engine 2: System TTS (free, no install)
-
-OS built-in voices.
+**Piper** — download a voice then switch:
 
 ```bash
-# macOS
-say -v '?' | grep zh
-# Windows
-powershell "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo | Select Name,Culture"
+.\scripts\install-piper-voice.ps1 zh_CN-huayan-medium  ;  .\scripts\set-voice.ps1 zh_CN-huayan-medium piper   # Windows
+bash scripts/install-piper-voice.sh zh_CN-huayan-medium && bash scripts/set-voice.sh zh_CN-huayan-medium piper  # macOS / Linux
 ```
 
-Common: `Mei-Jia` (mac TW), `Tingting` (mac CN), `Microsoft Yating Desktop` (Win TW).
+Samples: <https://rhasspy.github.io/piper-samples/>. Catalog: <https://huggingface.co/rhasspy/piper-voices/tree/main>.
+
+**ElevenLabs** — copy a voice ID from <https://elevenlabs.io/app/voice-library>, then:
 
 ```
-TTS_ENGINE=system
-TTS_VOICE=Mei-Jia
+TTS_ENGINE=elevenlabs
+TTS_VOICE=<voice_id>
+ELEVENLABS_API_KEY=<your_key>
 ```
 
-### Engine 3: Piper (free, local, neural quality)
-
-Recommended for offline use with neural-quality voices.
-
-**Option A — download during install** (one-shot):
-```bash
-# Windows
-$env:PIPER_VOICE='zh_CN-huayan-medium'; .\install.ps1
-
-# macOS / Linux
-PIPER_VOICE=zh_CN-huayan-medium ./install.sh
-```
-
-**Option B — install voice after the fact:**
-```bash
-.\scripts\install-piper-voice.ps1 zh_CN-huayan-medium       # Windows
-bash scripts/install-piper-voice.sh zh_CN-huayan-medium     # macOS / Linux
-```
-
-Then switch:
-```bash
-.\scripts\set-voice.ps1 zh_CN-huayan-medium piper     # Windows
-bash scripts/set-voice.sh zh_CN-huayan-medium piper   # macOS / Linux
-```
-
-Audition voices: [Piper samples](https://rhasspy.github.io/piper-samples/). Full catalog: https://huggingface.co/rhasspy/piper-voices/tree/main.
-
-### Engine 4: ElevenLabs (cloud, paid, premium quality)
-
-1. Get a key from https://elevenlabs.io/app/settings/api-keys.
-2. Browse https://elevenlabs.io/app/voice-library, copy a voice ID.
-3. ```
-   TTS_ENGINE=elevenlabs
-   TTS_VOICE=<voice_id>
-   ELEVENLABS_API_KEY=<your_key>
-   ```
-
-## Control (skill / script)
-
-After install, the `/listen` skill is registered with Claude Code. It controls both **on/off** and **how much** of each response is read.
-
-**On/off:**
-
-```
-/listen          → toggle current state
-/listen on       → enable
-/listen off      → disable
-/listen status   → report state
-```
-
-**Reading mode** (switch between brief / detailed at any time):
-
-```
-/listen brief     → read only the opening paragraph (TTS_MODE=first)
-/listen progress  → opening + first ~4 bullets (default)
-/listen summary   → first sentence per paragraph + headings
-/listen detailed  → read the entire response (TTS_MODE=full)
-/listen mode      → report current mode
-```
-
-You can also run the script directly:
+## Uninstall
 
 ```bash
-.\scripts\toggle.ps1  [on|off|status|brief|progress|summary|detailed|mode]   # Windows
-bash scripts/toggle.sh [on|off|status|brief|progress|summary|detailed|mode]  # macOS / Linux
+.\uninstall.ps1   # Windows
+./uninstall.sh    # macOS / Linux
 ```
 
-The on/off toggle uses a marker file (`$TMPDIR/listen-claude.disabled`); mode changes are written to `.env`. Either way, the next Claude response picks up the change — no daemon restart, no Claude restart needed.
+Removes the Stop hook from `~/.claude/settings.json`. Repo files stay on disk.
 
-## Configuration
+---
 
-Edit `.env` in the repo root.
+## Configuration (`.env`)
 
 | Variable | Default | Notes |
 |----------|---------|-------|
 | `TTS_ENABLED` | `1` | `0` disables without uninstalling. |
 | `TTS_ENGINE` | `edge` | `edge`, `system`, `piper`, or `elevenlabs`. |
 | `TTS_VOICE` | `zh-TW-HsiaoChenNeural` | Engine-specific voice ID. |
-| `TTS_MODE` | `progress` | `progress` (intro + bullets), `first`, `summary`, or `full`. Switchable at runtime via `/listen <mode>`. |
+| `TTS_MODE` | `progress` | `progress`, `first`, `summary`, or `full`. Switchable at runtime via `/listen <mode>`. |
 | `TTS_MIN_WORDS` | `20` | Skip TTS if response shorter than this. |
 | `TTS_MAX_CHARS` | `500` | Truncate longer responses. |
-| `TTS_RATE` | `200` | Rough words-per-minute. |
+| `TTS_RATE` | `200` | Rough words-per-minute (engine-specific mapping). |
+| `ANNOUNCE_PROJECT` | `1` | Prepend project / window name before spoken text. |
 | `PIPER_VOICES_DIR` | `~/.cache/piper-voices` | Piper voice files location. |
 
 ## How it works
@@ -179,14 +148,14 @@ Edit `.env` in the repo root.
 ```
 Claude Code finishes responding
         ↓ Stop hook fires
-scripts/on_stop.{ps1,sh} receives JSON on stdin
+scripts/stop_hook_entry.py receives JSON on stdin
         ↓
 listen_bridge.runner:
-  1. Parse transcript_path from payload
-  2. Tail transcript JSONL for the last assistant message
-  3. Apply TTS_MODE (full / first paragraph / heuristic summary)
-  4. Strip code blocks and markdown noise
-  5. Truncate to TTS_MAX_CHARS
+  1. Parse last assistant message from the hook payload
+  2. Apply TTS_MODE (progress / brief / summary / full)
+  3. Strip code blocks and markdown noise
+  4. Truncate to TTS_MAX_CHARS
+  5. Acquire the per-host lock (queue if another window is speaking)
   6. Dispatch to TTS_ENGINE
         ↓
 TTS engine plays audio in the background — never blocks Claude Code.
@@ -196,15 +165,6 @@ TTS engine plays audio in the background — never blocks Claude Code.
 
 `%TEMP%\listen-claude.log` (Windows) or `$TMPDIR/listen-claude.log` (Unix).
 
-## Uninstall
-
-```bash
-.\uninstall.ps1      # Windows
-./uninstall.sh       # macOS / Linux
-```
-
-Removes the Stop hook from `~/.claude/settings.json`. Repo files stay on disk.
-
 ## Coexistence with other Claude Code plugins
 
-ListenClaude only adds a `Stop` hook. It plays nicely with any other plugin that uses `SessionStart` / `SessionEnd` / `PreToolUse` etc. — including [Kaikou-Claude](https://github.com/GeniusPudding/Kaikou-Claude) (Chinese voice input). The `patch_settings.py` script matches its own entries by the `scripts/on_stop` substring so re-install / uninstall never touches unrelated hooks.
+Listen-Claude only adds a `Stop` hook. It plays nicely with any other plugin that uses `SessionStart` / `SessionEnd` / `PreToolUse` etc. — including [Kaikou-Claude](https://github.com/GeniusPudding/Kaikou-Claude) (Chinese voice input). The `patch_settings.py` script matches its own entries by a known substring so re-install / uninstall never touches unrelated hooks.

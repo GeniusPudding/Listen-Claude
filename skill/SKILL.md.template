@@ -1,11 +1,11 @@
 ---
 name: listen
-description: Control ListenClaude TTS readback of Claude responses. Toggle on/off (`on`, `off`, `status`, no arg) or change reading length (`brief`, `progress`, `summary`, `detailed`, `mode`). Use whenever the user asks to mute/unmute Claude's voice, switch between short and detailed spoken replies, or check current state.
+description: Control Listen-Claude TTS readback of Claude responses. Toggle on/off (`on`, `off`, `status`, no arg) or change reading length (`brief`, `progress`, `summary`, `detailed`, `mode`). Use whenever the user asks to mute/unmute Claude's voice, switch between short and detailed spoken replies, or check current state.
 ---
 
 # Listen — control Claude voice readback
 
-This skill controls ListenClaude, a TTS plugin that reads Claude's responses aloud through the system speakers (triggered by the Stop hook).
+This skill controls Listen-Claude, a TTS plugin that reads Claude's responses aloud through the system speakers (triggered by the Stop hook).
 
 The user's intent is encoded in the argument. Two groups:
 
@@ -44,4 +44,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "__REPO_DIR__\scripts\toggle
 bash "__REPO_DIR__/scripts/toggle.sh" __ACTION__
 ```
 
-Replace `__ACTION__` with the user's argument (omit if no arg given — defaults to on/off toggle). The script prints either `ListenClaude TTS: ON|OFF` or `ListenClaude mode: <mode>` depending on which arg was used.
+Replace `__ACTION__` with the user's argument (omit if no arg given — defaults to on/off toggle). The script prints either `Listen-Claude TTS: ON|OFF` or `Listen-Claude mode: <mode>` depending on which arg was used.

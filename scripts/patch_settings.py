@@ -1,4 +1,4 @@
-"""Idempotently install/uninstall the ListenClaude Stop hook.
+"""Idempotently install/uninstall the Listen-Claude Stop hook.
 
 Usage:
     python patch_settings.py <settings_file> install <platform> <repo_dir>
@@ -13,7 +13,7 @@ import json
 import os
 import sys
 
-# Match any past or present ListenClaude hook entry. Keep adding to this list
+# Match any past or present Listen-Claude hook entry. Keep adding to this list
 # if the entry path ever changes again.
 MARKERS = ("stop_hook_entry", "scripts/on_stop")
 

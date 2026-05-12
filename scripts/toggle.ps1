@@ -1,4 +1,4 @@
-# Control ListenClaude TTS: on/off + reading mode.
+# Control Listen-Claude TTS: on/off + reading mode.
 # Usage:
 #   .\scripts\toggle.ps1                  toggle current on/off state
 #   .\scripts\toggle.ps1 on               force on
@@ -36,7 +36,7 @@ function Set-Mode($mode) {
         $kept = @(Get-Content $envFile) | Where-Object { $_ -notmatch '^\s*TTS_MODE\s*=' }
         $kept + "TTS_MODE=$mode" | Set-Content -Path $envFile -Encoding UTF8
     }
-    Write-Host "ListenClaude mode: $mode"
+    Write-Host "Listen-Claude mode: $mode"
 }
 
 function Get-Mode {
@@ -50,7 +50,7 @@ function Get-Mode {
 
 # Mode setters.
 if ($validModes -contains $action) { Set-Mode $action; exit 0 }
-if ($action -eq 'mode')             { Write-Host "ListenClaude mode: $(Get-Mode)"; exit 0 }
+if ($action -eq 'mode')             { Write-Host "Listen-Claude mode: $(Get-Mode)"; exit 0 }
 
 # on/off/status/toggle.
 $exists = Test-Path $marker
@@ -63,4 +63,4 @@ switch ($action) {
         else         { New-Item -ItemType File -Path $marker -Force | Out-Null; $state = 'OFF' }
     }
 }
-Write-Host "ListenClaude TTS: $state"
+Write-Host "Listen-Claude TTS: $state"

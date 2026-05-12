@@ -1,4 +1,4 @@
-# Uninstall ListenClaude: remove the Stop hook entry. Repo files remain.
+# Uninstall Listen-Claude: remove the Stop hook entry. Repo files remain.
 
 $ErrorActionPreference = 'Continue'
 $repoDir      = $PSScriptRoot
@@ -7,7 +7,7 @@ $patchScript  = Join-Path $repoDir 'scripts\patch_settings.py'
 $settingsFile = Join-Path $HOME '.claude\settings.json'
 
 Write-Host ''
-Write-Host '=== ListenClaude uninstall ==='
+Write-Host '=== Listen-Claude uninstall ==='
 
 if ((Test-Path $patchScript) -and (Test-Path $settingsFile)) {
     $pythonCmd = $null

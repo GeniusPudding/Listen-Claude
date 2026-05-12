@@ -1,11 +1,11 @@
 ---
 name: choose-voice
-description: Choose or list a TTS voice for ListenClaude (audio readback of Claude responses). Supports Edge TTS (free Microsoft neural voices), system voices, Piper offline models, and ElevenLabs cloud voices. Use whenever the user asks to "pick a voice", "change voice", "list voices", "use voice <id>", or "browse voice library".
+description: Choose or list a TTS voice for Listen-Claude (audio readback of Claude responses). Supports Edge TTS (free Microsoft neural voices), system voices, Piper offline models, and ElevenLabs cloud voices. Use whenever the user asks to "pick a voice", "change voice", "list voices", "use voice <id>", or "browse voice library".
 ---
 
-# choose-voice — set or browse the TTS voice for ListenClaude
+# choose-voice — set or browse the TTS voice for Listen-Claude
 
-ListenClaude's read-aloud uses one of four engines: **edge** (free Microsoft neural, default), **system** (OS built-in), **piper** (local offline), **elevenlabs** (paid cloud). This skill helps the user pick a voice and writes the choice to `.env` so it takes effect on the next response.
+Listen-Claude's read-aloud uses one of four engines: **edge** (free Microsoft neural, default), **system** (OS built-in), **piper** (local offline), **elevenlabs** (paid cloud). This skill helps the user pick a voice and writes the choice to `.env` so it takes effect on the next response.
 
 ## How to interpret the user's request
 

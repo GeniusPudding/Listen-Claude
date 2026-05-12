@@ -1,4 +1,4 @@
-# Install ListenClaude: create venv, install deps, register Stop hook.
+# Install Listen-Claude: create venv, install deps, register Stop hook.
 # Safe to re-run.
 
 $ErrorActionPreference = 'Stop'
@@ -12,7 +12,7 @@ $patchScript   = Join-Path $repoDir 'scripts\patch_settings.py'
 $envFile       = Join-Path $repoDir '.env'
 
 Write-Host ''
-Write-Host '=== ListenClaude install ==='
+Write-Host '=== Listen-Claude install ==='
 Write-Host "Location: $repoDir"
 
 # 1. Find a usable system Python.

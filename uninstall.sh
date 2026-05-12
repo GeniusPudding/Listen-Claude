@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Uninstall ListenClaude: remove the Stop hook entry. Repo files remain.
+# Uninstall Listen-Claude: remove the Stop hook entry. Repo files remain.
 
 set -u
 
@@ -9,7 +9,7 @@ patch_script="$repo_dir/scripts/patch_settings.py"
 settings_file="$HOME/.claude/settings.json"
 
 echo
-echo "=== ListenClaude uninstall ==="
+echo "=== Listen-Claude uninstall ==="
 
 if [[ -f "$patch_script" && -f "$settings_file" ]]; then
     python_cmd="$venv_python"

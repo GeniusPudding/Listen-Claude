@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Control ListenClaude TTS: on/off + reading mode.
+# Control Listen-Claude TTS: on/off + reading mode.
 # Usage:
 #   bash scripts/toggle.sh                  toggle current on/off state
 #   bash scripts/toggle.sh on               force on
@@ -36,7 +36,7 @@ set_mode() {
         printf 'TTS_MODE=%s\n' "$mode" >> "$tmp"
         mv "$tmp" "$env_file"
     fi
-    echo "ListenClaude mode: $mode"
+    echo "Listen-Claude mode: $mode"
 }
 
 get_mode() {
@@ -56,7 +56,7 @@ case "$action" in
         set_mode "$action"; exit 0
         ;;
     mode)
-        echo "ListenClaude mode: $(get_mode)"; exit 0
+        echo "Listen-Claude mode: $(get_mode)"; exit 0
         ;;
 esac
 
@@ -85,4 +85,4 @@ case "$action" in
         ;;
 esac
 
-echo "ListenClaude TTS: $state"
+echo "Listen-Claude TTS: $state"

@@ -1,6 +1,6 @@
 [English](README.md) · [繁體中文](README.zh-TW.md)
 
-# ListenClaude（聽聲即克）
+# Listen-Claude（聽聲即克）
 
 把 Claude Code 的回應變成語音播出來。Claude 回完話自動觸發 — 邊看邊聽,擴大人機互動的輸入頻寬。
 
@@ -9,10 +9,10 @@
 ## 特色
 
 - **自動觸發** — Claude Code 的 `Stop` hook,Claude 回完話就播,完全免互動。
-- **本地優先** — 預設用 OS 內建 TTS（macOS `say`、Windows SAPI、Linux `spd-say`）。
-- **可換引擎** — 換 [Piper TTS](https://github.com/rhasspy/piper) 可拿到離線高品質人聲。
-- **可調朗讀模式** — 全文 / 只念第一段 / 重點摘要。
+- **四種 TTS 引擎** — 免費神經網路 (Edge)、OS 內建、純離線 (Piper)、頂級雲端 (ElevenLabs)。
+- **即時切換朗讀詳細度** — `/listen <mode>` 隨時在簡答/詳答之間切。
 - **跳過廢話** — 太短的回應（如 "ok"）不念。
+- **多視窗排隊** — 多個 Claude session 不會疊音播放。
 
 ## 平台支援
 
@@ -20,32 +20,64 @@
 |------|---------|------|------|
 | Windows | Edge TTS | **穩定** | 也可用 `system` 引擎走 SAPI |
 | macOS | Edge TTS | **穩定** | 也可用 `system` 引擎走 `say` |
-| Linux | Edge TTS | **穩定** | MP3 播放需裝 `mpg123`（edge / elevenlabs 引擎用） |
+| Linux | Edge TTS | **穩定** | MP3 播放需裝 `mpg123`(edge / elevenlabs 引擎用) |
 
 ## 安裝
 
-每個平台都一行（clone + 跑 install）：
+每個平台都一行(clone + 跑 install):
 
 ```bash
-git clone https://github.com/GeniusPudding/ListenClaude.git
-cd ListenClaude
+git clone https://github.com/GeniusPudding/Listen-Claude.git
+cd Listen-Claude
 .\install.ps1   # Windows
 ./install.sh    # macOS / Linux
 ```
 
-安裝腳本：
+安裝腳本:
 
-1. 建 `.venv` 並裝 Python 依賴（含 `edge-tts`）。
-2. 寫一份預設 `.env`（若不存在）。
-3. 把 `Stop` hook 註冊到 `~/.claude/settings.json`,直接呼叫 venv Python（不經過 shell wrapper,避免 stdin 編碼被改）。
+1. 建 `.venv` 並裝 Python 依賴(含 `edge-tts`)。
+2. 寫一份預設 `.env`(若不存在)。
+3. 把 `Stop` hook 註冊到 `~/.claude/settings.json`,直接呼叫 venv Python(不經過 shell wrapper,避免 stdin 編碼被改)。
 4. 把 `/listen` 和 `/choose-voice` skill 裝到 `~/.claude/skills/`。
 5. 若安裝時設了 `PIPER_VOICE` 環境變數,順便下載 Piper 模型。
 
 冪等 — 隨時重跑都安全。
 
-## 挑聲音
+## 使用
 
-最簡單的方式是在 Claude 對話框用 `/choose-voice` skill：
+### 控制 — `/listen` skill
+
+一個 skill 同時管 開關 跟 朗讀詳細度。所有變更下一則 Claude 回應立即生效,不用重啟。
+
+**開關:**
+
+```
+/listen           → 切換目前狀態
+/listen on        → 開啟
+/listen off       → 關閉
+/listen status    → 查狀態
+```
+
+**朗讀模式**(簡答 ↔ 詳答,隨時切):
+
+```
+/listen brief     → 只念開頭一段
+/listen progress  → 開頭 + 前 ~4 個 bullet(預設)
+/listen summary   → 每段第一句 + 標題
+/listen detailed  → 整則回應全念
+/listen mode      → 印出目前模式
+```
+
+等價腳本(skill 底下就是叫它):
+
+```bash
+.\scripts\toggle.ps1  <arg>   # Windows
+bash scripts/toggle.sh <arg>  # macOS / Linux
+```
+
+開關用 marker 檔(`$TMPDIR/listen-claude.disabled`),模式寫進 `.env`。
+
+### 挑聲音 — `/choose-voice` skill
 
 ```
 /choose-voice                                 → 列選項
@@ -54,147 +86,37 @@ cd ListenClaude
 /choose-voice 我現在用哪個聲音
 ```
 
-### 引擎 1: Edge TTS（預設,免費,高品質）
+Skill 從 voice ID 格式自動判斷引擎(`zh-TW-…Neural` → Edge、`zh_CN-…` → Piper、20 字元 alphanumeric → ElevenLabs、其他 → system)。
 
-[Microsoft Edge 的神經網路聲音](https://learn.microsoft.com/azure/ai-services/speech-service/language-support),免費、不需 API key。安裝時自動裝。
+#### 引擎一覽
 
-熱門中文聲音：
-- `zh-TW-HsiaoChenNeural` — TW 女,溫暖（預設）
-- `zh-TW-YunJheNeural` — TW 男
-- `zh-CN-XiaoxiaoNeural` — CN 女,熱門
-- `zh-CN-YunyangNeural` — CN 男,播音腔
-- `yue-HK-WanLungNeural` — 粵語男
+| 引擎 | 費用 | 品質 | 設定 | 適用 |
+|------|------|------|------|------|
+| **`edge`**(預設) | 免費 | 高(神經網路) | 自動 | 不知道選哪個就用這個 |
+| `system` | 免費 | 普通 | 無 | 不想連網、想最輕量 |
+| `piper` | 免費 | 高(神經網路) | 手動下載模型 | 純離線 / 不出網路 |
+| `elevenlabs` | 付費 | 頂級 | 需 API key | 對音質要求極高 |
 
-完整清單：`.venv/bin/edge-tts --list-voices | grep zh`
+**Edge TTS** — 熱門中文聲音:`zh-TW-HsiaoChenNeural`(TW 女,預設)、`zh-TW-YunJheNeural`(TW 男)、`zh-CN-XiaoxiaoNeural`(CN 女)、`yue-HK-WanLungNeural`(粵語)。完整清單:`.venv/bin/edge-tts --list-voices`。
 
-```
-TTS_ENGINE=edge
-TTS_VOICE=zh-TW-HsiaoChenNeural
-```
+**系統內建** — `Mei-Jia`(mac TW)、`Tingting`(mac CN)、`Microsoft Yating Desktop`(Win TW)。設 `TTS_ENGINE=system`。
 
-### 引擎 2: 系統內建（免費,免裝）
-
-OS 內建聲音。
+**Piper** — 下載聲音再切換:
 
 ```bash
-# macOS
-say -v '?' | grep zh
-# Windows
-powershell "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo | Select Name,Culture"
+.\scripts\install-piper-voice.ps1 zh_CN-huayan-medium  ;  .\scripts\set-voice.ps1 zh_CN-huayan-medium piper   # Windows
+bash scripts/install-piper-voice.sh zh_CN-huayan-medium && bash scripts/set-voice.sh zh_CN-huayan-medium piper  # macOS / Linux
 ```
 
-常見：`Mei-Jia` (mac TW)、`Tingting` (mac CN)、`Microsoft Yating Desktop` (Win TW)。
+試聽:<https://rhasspy.github.io/piper-samples/>。完整目錄:<https://huggingface.co/rhasspy/piper-voices/tree/main>。
+
+**ElevenLabs** — 到 <https://elevenlabs.io/app/voice-library> 複製喜歡的 voice ID,然後:
 
 ```
-TTS_ENGINE=system
-TTS_VOICE=Mei-Jia
+TTS_ENGINE=elevenlabs
+TTS_VOICE=<voice_id>
+ELEVENLABS_API_KEY=<你的金鑰>
 ```
-
-### 引擎 3: Piper（免費,本地,神經網路品質）
-
-適合離線使用,品質僅次於 Edge TTS / ElevenLabs。
-
-**方案 A — 安裝時順便下載**（一次搞定）：
-```bash
-# Windows
-$env:PIPER_VOICE='zh_CN-huayan-medium'; .\install.ps1
-
-# macOS / Linux
-PIPER_VOICE=zh_CN-huayan-medium ./install.sh
-```
-
-**方案 B — 事後下載：**
-```bash
-.\scripts\install-piper-voice.ps1 zh_CN-huayan-medium       # Windows
-bash scripts/install-piper-voice.sh zh_CN-huayan-medium     # macOS / Linux
-```
-
-下載完切換引擎：
-```bash
-.\scripts\set-voice.ps1 zh_CN-huayan-medium piper     # Windows
-bash scripts/set-voice.sh zh_CN-huayan-medium piper   # macOS / Linux
-```
-
-線上試聽：[Piper samples](https://rhasspy.github.io/piper-samples/)。完整清單：https://huggingface.co/rhasspy/piper-voices/tree/main
-
-### 引擎 4: ElevenLabs（雲端,付費,頂級品質）
-
-1. 到 https://elevenlabs.io/app/settings/api-keys 拿 API key。
-2. 開 https://elevenlabs.io/app/voice-library 線上試聽,複製喜歡的 voice ID。
-3. ```
-   TTS_ENGINE=elevenlabs
-   TTS_VOICE=<voice_id>
-   ELEVENLABS_API_KEY=<你的金鑰>
-   ```
-
-## 控制 (skill / 腳本)
-
-安裝後 `/listen` skill 已註冊到 Claude Code,同時管 **開關** 跟 **朗讀詳細度**。
-
-**開關：**
-
-```
-/listen          → 切換目前狀態
-/listen on       → 開啟
-/listen off      → 關閉
-/listen status   → 查狀態
-```
-
-**朗讀模式**（簡答 / 詳答隨時切換）：
-
-```
-/listen brief     → 只念開頭一段（TTS_MODE=first）
-/listen progress  → 開頭 + 前 ~4 個 bullet（預設）
-/listen summary   → 每段第一句 + 標題
-/listen detailed  → 整則回應全念（TTS_MODE=full）
-/listen mode      → 印出目前模式
-```
-
-也可以直接跑腳本：
-
-```bash
-.\scripts\toggle.ps1  [on|off|status|brief|progress|summary|detailed|mode]   # Windows
-bash scripts/toggle.sh [on|off|status|brief|progress|summary|detailed|mode]  # macOS / Linux
-```
-
-開關用 marker 檔 (`$TMPDIR/listen-claude.disabled`),模式則寫到 `.env`。兩者都在下一次 Claude 回應立即生效,不用重啟。
-
-## 設定
-
-寫在 repo 根目錄的 `.env`。
-
-| 變數 | 預設 | 說明 |
-|------|------|------|
-| `TTS_ENABLED` | `1` | `0` 暫停 TTS（不用 uninstall） |
-| `TTS_ENGINE` | `edge` | `edge` / `system` / `piper` / `elevenlabs` |
-| `TTS_VOICE` | `zh-TW-HsiaoChenNeural` | 引擎對應的 voice ID |
-| `TTS_MODE` | `progress` | `progress`（開頭 + bullets）/ `first` / `summary` / `full`；可用 `/listen <mode>` 即時切換 |
-| `TTS_MIN_WORDS` | `20` | 短於此字數的回應不念 |
-| `TTS_MAX_CHARS` | `500` | 截斷過長回應 |
-| `TTS_RATE` | `200` | 大略 wpm |
-| `PIPER_VOICES_DIR` | `~/.cache/piper-voices` | Piper 模型檔目錄 |
-
-## 運作原理
-
-```
-Claude 回完話
-        ↓ Stop hook 觸發
-scripts/on_stop.{ps1,sh} 從 stdin 收 JSON
-        ↓
-listen_bridge.runner:
-  1. 解析 transcript_path
-  2. 讀 transcript JSONL 抓最後一則 assistant message
-  3. 套用 TTS_MODE（全文 / 只第一段 / 摘要）
-  4. 去掉 code block 跟 markdown 噪音
-  5. 截斷到 TTS_MAX_CHARS
-  6. 派給 TTS_ENGINE
-        ↓
-TTS 在背景播音 — 不會阻塞 Claude Code。
-```
-
-## 日誌
-
-`%TEMP%\listen-claude.log`(Windows) 或 `$TMPDIR/listen-claude.log`(Unix)。
 
 ## 解除安裝
 
@@ -205,6 +127,44 @@ TTS 在背景播音 — 不會阻塞 Claude Code。
 
 從 `~/.claude/settings.json` 移除 Stop hook。檔案保留。
 
+---
+
+## 設定(`.env`)
+
+| 變數 | 預設 | 說明 |
+|------|------|------|
+| `TTS_ENABLED` | `1` | `0` 暫停 TTS(不用 uninstall) |
+| `TTS_ENGINE` | `edge` | `edge` / `system` / `piper` / `elevenlabs` |
+| `TTS_VOICE` | `zh-TW-HsiaoChenNeural` | 引擎對應的 voice ID |
+| `TTS_MODE` | `progress` | `progress` / `first` / `summary` / `full`;可用 `/listen <mode>` 即時切換 |
+| `TTS_MIN_WORDS` | `20` | 短於此字數的回應不念 |
+| `TTS_MAX_CHARS` | `500` | 截斷過長回應 |
+| `TTS_RATE` | `200` | 大略 wpm |
+| `ANNOUNCE_PROJECT` | `1` | 在朗讀前先報專案 / 視窗名 |
+| `PIPER_VOICES_DIR` | `~/.cache/piper-voices` | Piper 模型檔目錄 |
+
+## 運作原理
+
+```
+Claude 回完話
+        ↓ Stop hook 觸發
+scripts/stop_hook_entry.py 從 stdin 收 JSON
+        ↓
+listen_bridge.runner:
+  1. 從 payload 解出最後一則 assistant message
+  2. 套用 TTS_MODE(progress / brief / summary / full)
+  3. 去掉 code block 跟 markdown 噪音
+  4. 截斷到 TTS_MAX_CHARS
+  5. 拿 per-host lock(若有其他視窗在播就排隊)
+  6. 派給 TTS_ENGINE
+        ↓
+TTS 在背景播音 — 不會阻塞 Claude Code。
+```
+
+## 日誌
+
+`%TEMP%\listen-claude.log`(Windows) 或 `$TMPDIR/listen-claude.log`(Unix)。
+
 ## 與其他 Claude Code plugin 共存
 
-ListenClaude 只加 `Stop` hook,跟用 `SessionStart` / `SessionEnd` / `PreToolUse` 等其他 hook 的 plugin 不衝突 — 包含 [Kaikou-Claude](https://github.com/GeniusPudding/Kaikou-Claude)（中文語音輸入）。`patch_settings.py` 用 `scripts/on_stop` 子路徑識別自己的 entry,重裝/解除不會誤砍別人的 hook。
+Listen-Claude 只加 `Stop` hook,跟用 `SessionStart` / `SessionEnd` / `PreToolUse` 等其他 hook 的 plugin 不衝突 — 包含 [Kaikou-Claude](https://github.com/GeniusPudding/Kaikou-Claude)(中文語音輸入)。`patch_settings.py` 用已知 substring 識別自己的 entry,重裝/解除不會誤砍別人的 hook。
