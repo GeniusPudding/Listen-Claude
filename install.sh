@@ -47,14 +47,19 @@ chmod +x "$repo_dir/scripts/on_stop.sh" "$repo_dir/scripts/toggle.sh" 2>/dev/nul
 mkdir -p "$(dirname "$settings_file")"
 "$venv_python" "$patch_script" "$settings_file" install unix "$repo_dir"
 
-# 5. Install /listen skill to ~/.claude/skills/listen/SKILL.md.
-skill_dir="$HOME/.claude/skills/listen"
-template="$repo_dir/skill/SKILL.md.template"
-if [[ -f "$template" ]]; then
-    mkdir -p "$skill_dir"
-    sed "s|__REPO_DIR__|$repo_dir|g" "$template" > "$skill_dir/SKILL.md"
-    echo "Skill /listen installed at: $skill_dir"
-fi
+# 5. Install /listen and /choose-voice skills to ~/.claude/skills/.
+chmod +x "$repo_dir/scripts/set-voice.sh" 2>/dev/null || true
+install_skill() {
+    local template="$1"
+    local name="$2"
+    local dir="$HOME/.claude/skills/$name"
+    [[ -f "$template" ]] || return 0
+    mkdir -p "$dir"
+    sed "s|__REPO_DIR__|$repo_dir|g" "$template" > "$dir/SKILL.md"
+    echo "Skill /$name installed at: $dir"
+}
+install_skill "$repo_dir/skill/SKILL.md.template"        "listen"
+install_skill "$repo_dir/skill/CHOOSE_VOICE.md.template" "choose-voice"
 
 echo
 echo "=== Done ==="

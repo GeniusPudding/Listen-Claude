@@ -46,17 +46,22 @@ if (-not (Test-Path $envFile)) {
 if (-not (Test-Path $settingsDir)) { New-Item -ItemType Directory -Path $settingsDir | Out-Null }
 & $venvPython $patchScript $settingsFile install win $repoDir
 
-# 5. Install /listen skill to ~/.claude/skills/listen/SKILL.md.
-$skillDir   = Join-Path $HOME '.claude\skills\listen'
-$templateFp = Join-Path $repoDir 'skill\SKILL.md.template'
-if (Test-Path $templateFp) {
-    if (-not (Test-Path $skillDir)) { New-Item -ItemType Directory -Path $skillDir | Out-Null }
-    $template = Get-Content $templateFp -Raw
-    $repoFwd = $repoDir -replace '\\','/'
-    $skillContent = $template.Replace('__REPO_DIR__', $repoFwd)
-    Set-Content -Path (Join-Path $skillDir 'SKILL.md') -Value $skillContent -Encoding UTF8
-    Write-Host "Skill /listen installed at: $skillDir"
+# 5. Install /listen and /choose-voice skills to ~/.claude/skills/.
+$repoFwd = $repoDir -replace '\\','/'
+$skillsRoot = Join-Path $HOME '.claude\skills'
+
+function Install-Skill($templateRel, $skillName) {
+    $templateFp = Join-Path $repoDir $templateRel
+    if (-not (Test-Path $templateFp)) { return }
+    $dir = Join-Path $skillsRoot $skillName
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $content = (Get-Content $templateFp -Raw).Replace('__REPO_DIR__', $repoFwd)
+    Set-Content -Path (Join-Path $dir 'SKILL.md') -Value $content -Encoding UTF8
+    Write-Host "Skill /$skillName installed at: $dir"
 }
+
+Install-Skill 'skill\SKILL.md.template'         'listen'
+Install-Skill 'skill\CHOOSE_VOICE.md.template'  'choose-voice'
 
 Write-Host ''
 Write-Host '=== Done ==='

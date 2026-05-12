@@ -64,9 +64,25 @@ TTS_VOICE=Mei-Jia
    TTS_VOICE=zh_CN-huayan-medium
    ```
 
-### ElevenLabs / 雲端 TTS
+### ElevenLabs（雲端,最高品質,付費）
 
-還沒內建,歡迎 PR。[Voice Library](https://elevenlabs.io/app/voice-library) 有上千種社群聲音可線上試聽。
+1. 到 https://elevenlabs.io/app/settings/api-keys 拿 API key。
+2. 開 https://elevenlabs.io/app/voice-library 線上試聽,複製喜歡的 voice ID。
+3. 寫進 `.env`：
+   ```
+   TTS_ENGINE=elevenlabs
+   TTS_VOICE=<voice_id>
+   ELEVENLABS_API_KEY=<你的金鑰>
+   ELEVENLABS_MODEL=eleven_multilingual_v2   # 可選,預設
+   ```
+
+或者直接用 `/choose-voice` skill,在 Claude 對話框講就好。例如：
+
+```
+/choose-voice 21m00Tcm4TlvDq8ikWAM elevenlabs
+/choose-voice list ElevenLabs voices
+/choose-voice 我現在用哪個聲音
+```
 
 ## 開關 (skill / 腳本)
 

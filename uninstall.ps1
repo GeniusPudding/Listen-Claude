@@ -30,11 +30,13 @@ if ((Test-Path $patchScript) -and (Test-Path $settingsFile)) {
     Write-Host 'patch_settings.py or settings.json not found; skipping'
 }
 
-# Remove the /listen skill if present.
-$skillDir = Join-Path $HOME '.claude\skills\listen'
-if (Test-Path $skillDir) {
-    Remove-Item -Recurse -Force $skillDir
-    Write-Host "Removed /listen skill"
+# Remove our skills if present.
+foreach ($name in @('listen', 'choose-voice')) {
+    $dir = Join-Path $HOME ".claude\skills\$name"
+    if (Test-Path $dir) {
+        Remove-Item -Recurse -Force $dir
+        Write-Host "Removed /$name skill"
+    }
 }
 
 Write-Host ''

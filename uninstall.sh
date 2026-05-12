@@ -27,12 +27,14 @@ else
     echo "patch_settings.py or settings.json not found; skipping"
 fi
 
-# Remove the /listen skill if present.
-skill_dir="$HOME/.claude/skills/listen"
-if [[ -d "$skill_dir" ]]; then
-    rm -rf "$skill_dir"
-    echo "Removed /listen skill"
-fi
+# Remove our skills if present.
+for name in listen choose-voice; do
+    dir="$HOME/.claude/skills/$name"
+    if [[ -d "$dir" ]]; then
+        rm -rf "$dir"
+        echo "Removed /$name skill"
+    fi
+done
 
 echo
 echo "Done. Repo files kept; delete the directory manually for a clean wipe."

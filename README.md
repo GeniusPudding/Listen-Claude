@@ -64,9 +64,25 @@ TTS_VOICE=Mei-Jia
    TTS_VOICE=zh_CN-huayan-medium
    ```
 
-### ElevenLabs / cloud TTS
+### ElevenLabs (cloud, highest quality, paid)
 
-Not built in yet — open a PR or fork to add. Their [Voice Library](https://elevenlabs.io/app/voice-library) has thousands of community voices with online preview.
+1. Get an API key from https://elevenlabs.io/app/settings/api-keys.
+2. Browse https://elevenlabs.io/app/voice-library, audition with the built-in preview, copy a voice ID.
+3. Set in `.env`:
+   ```
+   TTS_ENGINE=elevenlabs
+   TTS_VOICE=<voice_id>
+   ELEVENLABS_API_KEY=<your_key>
+   ELEVENLABS_MODEL=eleven_multilingual_v2   # optional, default
+   ```
+
+Or use the `/choose-voice` skill in any Claude session — describe the voice ID and Claude will run the setter for you. Examples:
+
+```
+/choose-voice 21m00Tcm4TlvDq8ikWAM elevenlabs
+/choose-voice list ElevenLabs voices
+/choose-voice what voice am I using
+```
 
 ## Toggle (skill / script)
 

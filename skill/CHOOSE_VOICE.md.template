@@ -1,0 +1,57 @@
+---
+name: choose-voice
+description: Choose or list a TTS voice for ListenClaude (audio readback of Claude responses). Supports system voices (macOS say / Windows SAPI), Piper offline models, and ElevenLabs cloud voices. Use whenever the user asks to "pick a voice", "change voice", "list voices", "use voice <id>", or "browse ElevenLabs library".
+---
+
+# choose-voice — set or browse the TTS voice for ListenClaude
+
+ListenClaude's read-aloud uses one of three engines (system / piper / elevenlabs). This skill helps the user pick a voice from any of them and writes the choice to `.env` so it takes effect on the next response.
+
+## How to interpret the user's request
+
+| User intent | Action |
+|---|---|
+| "list system voices" / "macOS voices" / "SAPI voices" | List built-in OS voices (see below). |
+| "open ElevenLabs library" / "browse voices" | Tell the user to open https://elevenlabs.io/app/voice-library, audition, and copy a voice_id. |
+| "list my ElevenLabs voices" | Call ElevenLabs API to list voices saved in their account. Requires `ELEVENLABS_API_KEY` in `.env`. |
+| "use voice <id>" / "set voice to <name>" / "switch to <id>" | Run `set-voice.{ps1,sh}` with the voice ID. Detect engine from format: hex-ish 20-char string = elevenlabs; `.onnx` or `zh_CN-*` = piper; otherwise system. Pass the engine as second arg when changing. |
+| "what voice am I using" / "current voice" | Read TTS_VOICE and TTS_ENGINE from `__REPO_DIR__/.env`. |
+
+## Listing voices
+
+### System (macOS)
+```
+say -v '?' | grep -E 'zh|en'
+```
+
+### System (Windows)
+```
+powershell "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo | Select Name,Culture"
+```
+
+### Piper
+List files in `~/.cache/piper-voices/*.onnx` (or `$PIPER_VOICES_DIR`). Direct user to https://rhasspy.github.io/piper-samples/ for previews / downloads.
+
+### ElevenLabs (user's saved voices)
+```bash
+curl -s -H "xi-api-key: $ELEVENLABS_API_KEY" https://api.elevenlabs.io/v1/voices | jq '.voices[] | {voice_id, name, labels}'
+```
+
+### ElevenLabs (community library)
+Tell the user to open https://elevenlabs.io/app/voice-library in their browser — that page has live preview which an API call cannot match.
+
+## Setting the voice
+
+**Windows:**
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File "__REPO_DIR__\scripts\set-voice.ps1" -VoiceId <id> [-Engine <engine>]
+```
+
+**macOS / Linux:**
+```
+bash "__REPO_DIR__/scripts/set-voice.sh" <id> [<engine>]
+```
+
+`<engine>` is `system`, `piper`, or `elevenlabs`. Omit if the engine is already configured correctly.
+
+After setting, echo back the new `TTS_ENGINE` and `TTS_VOICE` values (the script prints them). No restart needed — the next Claude response will use the new voice.
