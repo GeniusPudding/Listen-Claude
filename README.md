@@ -31,58 +31,69 @@ The installer creates a `.venv`, installs dependencies, copies `.env`, and regis
 
 ## Choosing a voice
 
-### Built-in (free, no install)
+The easiest way is the `/choose-voice` skill — just describe what you want in any Claude session:
 
-```bash
-# macOS — list Chinese voices
-say -v '?' | grep zh
-# Try them: say -v Mei-Jia "你好,我是測試"
-
-# Windows — list SAPI voices
-powershell "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo | Where-Object {`$_.Culture.Name -like 'zh*'} | Select Name,Culture"
+```
+/choose-voice                                 → list options
+/choose-voice list edge Chinese voices
+/choose-voice use zh-TW-HsiaoChenNeural
+/choose-voice what voice am I using
 ```
 
-Common Chinese voices:
-- macOS: `Mei-Jia` (TW female), `Tingting` (CN female), `Sin-ji` (HK Cantonese)
-- Windows: `Microsoft Yating Desktop` (TW), `Microsoft Hanhan Desktop` (Cantonese)
-- Linux: depends on `espeak`/`spd-say` installation
+### Engine 1: Edge TTS (default, free, high quality)
 
-Set in `.env`:
+[Microsoft Edge's neural voices](https://learn.microsoft.com/azure/ai-services/speech-service/language-support), free, no API key. Auto-installed.
+
+Popular Chinese voices:
+- `zh-TW-HsiaoChenNeural` — TW female, warm (default)
+- `zh-TW-YunJheNeural` — TW male
+- `zh-CN-XiaoxiaoNeural` — CN female, very popular
+- `zh-CN-YunyangNeural` — CN male, broadcaster
+- `yue-HK-WanLungNeural` — Cantonese male
+
+Full list: `.venv/bin/edge-tts --list-voices | grep zh`.
+
+```
+TTS_ENGINE=edge
+TTS_VOICE=zh-TW-HsiaoChenNeural
+```
+
+### Engine 2: System TTS (free, no install)
+
+OS built-in voices.
+
+```bash
+# macOS
+say -v '?' | grep zh
+# Windows
+powershell "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo | Select Name,Culture"
+```
+
+Common: `Mei-Jia` (mac TW), `Tingting` (mac CN), `Microsoft Yating Desktop` (Win TW).
+
 ```
 TTS_ENGINE=system
 TTS_VOICE=Mei-Jia
 ```
 
-### Piper (free, high quality, requires download)
+### Engine 3: Piper (free, local, requires manual download)
 
 1. `pip install piper-tts` inside the venv.
-2. Download a voice from [Piper samples](https://rhasspy.github.io/piper-samples/) — listen first, pick one you like. Recommended for Chinese: `zh_CN-huayan-medium`.
-3. Place the `.onnx` and `.onnx.json` files in `~/.cache/piper-voices/`.
-4. Set in `.env`:
-   ```
+2. Download a voice from [Piper samples](https://rhasspy.github.io/piper-samples/), put `.onnx` + `.onnx.json` in `~/.cache/piper-voices/`. Recommended: `zh_CN-huayan-medium`.
+3. ```
    TTS_ENGINE=piper
    TTS_VOICE=zh_CN-huayan-medium
    ```
 
-### ElevenLabs (cloud, highest quality, paid)
+### Engine 4: ElevenLabs (cloud, paid, premium quality)
 
-1. Get an API key from https://elevenlabs.io/app/settings/api-keys.
-2. Browse https://elevenlabs.io/app/voice-library, audition with the built-in preview, copy a voice ID.
-3. Set in `.env`:
-   ```
+1. Get a key from https://elevenlabs.io/app/settings/api-keys.
+2. Browse https://elevenlabs.io/app/voice-library, copy a voice ID.
+3. ```
    TTS_ENGINE=elevenlabs
    TTS_VOICE=<voice_id>
    ELEVENLABS_API_KEY=<your_key>
-   ELEVENLABS_MODEL=eleven_multilingual_v2   # optional, default
    ```
-
-Or use the `/choose-voice` skill in any Claude session — describe the voice ID and Claude will run the setter for you. Examples:
-
-```
-/choose-voice 21m00Tcm4TlvDq8ikWAM elevenlabs
-/choose-voice list ElevenLabs voices
-/choose-voice what voice am I using
-```
 
 ## Toggle (skill / script)
 

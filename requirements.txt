@@ -1,4 +1,9 @@
 python-dotenv>=1.0
+
+# Edge TTS — free Microsoft neural voices (recommended default).
+edge-tts>=6.1
+
+# Required only when TTS_ENGINE=elevenlabs.
 requests>=2.31
 
 # Optional, only required when TTS_ENGINE=piper:

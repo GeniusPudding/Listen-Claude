@@ -31,58 +31,69 @@ cd ListenClaude
 
 ## 挑聲音
 
-### 內建 (免費,免裝)
+最簡單的方式是在 Claude 對話框用 `/choose-voice` skill：
 
-```bash
-# macOS — 列中文聲音
-say -v '?' | grep zh
-# 試聽: say -v Mei-Jia "你好,我是測試"
-
-# Windows — 列 SAPI 中文聲音
-powershell "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo | Where-Object {`$_.Culture.Name -like 'zh*'} | Select Name,Culture"
+```
+/choose-voice                                 → 列選項
+/choose-voice list edge Chinese voices        → 列 Edge 的中文聲音
+/choose-voice use zh-TW-HsiaoChenNeural       → 換聲音
+/choose-voice 我現在用哪個聲音
 ```
 
-常見中文聲音：
-- macOS：`Mei-Jia`(TW 女)、`Tingting`(CN 女)、`Sin-ji`(粵語)
-- Windows：`Microsoft Yating Desktop`(TW)、`Microsoft Hanhan Desktop`(粵)
-- Linux：看 `espeak` / `spd-say` 是否有裝
+### 引擎 1: Edge TTS（預設,免費,高品質）
 
-寫進 `.env`：
+[Microsoft Edge 的神經網路聲音](https://learn.microsoft.com/azure/ai-services/speech-service/language-support),免費、不需 API key。安裝時自動裝。
+
+熱門中文聲音：
+- `zh-TW-HsiaoChenNeural` — TW 女,溫暖（預設）
+- `zh-TW-YunJheNeural` — TW 男
+- `zh-CN-XiaoxiaoNeural` — CN 女,熱門
+- `zh-CN-YunyangNeural` — CN 男,播音腔
+- `yue-HK-WanLungNeural` — 粵語男
+
+完整清單：`.venv/bin/edge-tts --list-voices | grep zh`
+
+```
+TTS_ENGINE=edge
+TTS_VOICE=zh-TW-HsiaoChenNeural
+```
+
+### 引擎 2: 系統內建（免費,免裝）
+
+OS 內建聲音。
+
+```bash
+# macOS
+say -v '?' | grep zh
+# Windows
+powershell "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo | Select Name,Culture"
+```
+
+常見：`Mei-Jia` (mac TW)、`Tingting` (mac CN)、`Microsoft Yating Desktop` (Win TW)。
+
 ```
 TTS_ENGINE=system
 TTS_VOICE=Mei-Jia
 ```
 
-### Piper（免費,高品質,要下載）
+### 引擎 3: Piper（免費,本地,要手動下載）
 
 1. venv 裡 `pip install piper-tts`
-2. 到 [Piper 試聽頁面](https://rhasspy.github.io/piper-samples/) 線上試聽,挑喜歡的。中文推薦 `zh_CN-huayan-medium`。
-3. 把 `.onnx` 跟 `.onnx.json` 放到 `~/.cache/piper-voices/`
-4. 寫進 `.env`：
-   ```
+2. 到 [Piper 試聽頁面](https://rhasspy.github.io/piper-samples/) 線上試聽下載,`.onnx` + `.onnx.json` 放到 `~/.cache/piper-voices/`。中文推薦 `zh_CN-huayan-medium`。
+3. ```
    TTS_ENGINE=piper
    TTS_VOICE=zh_CN-huayan-medium
    ```
 
-### ElevenLabs（雲端,最高品質,付費）
+### 引擎 4: ElevenLabs（雲端,付費,頂級品質）
 
 1. 到 https://elevenlabs.io/app/settings/api-keys 拿 API key。
 2. 開 https://elevenlabs.io/app/voice-library 線上試聽,複製喜歡的 voice ID。
-3. 寫進 `.env`：
-   ```
+3. ```
    TTS_ENGINE=elevenlabs
    TTS_VOICE=<voice_id>
    ELEVENLABS_API_KEY=<你的金鑰>
-   ELEVENLABS_MODEL=eleven_multilingual_v2   # 可選,預設
    ```
-
-或者直接用 `/choose-voice` skill,在 Claude 對話框講就好。例如：
-
-```
-/choose-voice 21m00Tcm4TlvDq8ikWAM elevenlabs
-/choose-voice list ElevenLabs voices
-/choose-voice 我現在用哪個聲音
-```
 
 ## 開關 (skill / 腳本)
 

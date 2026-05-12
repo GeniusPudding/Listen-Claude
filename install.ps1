@@ -56,7 +56,11 @@ function Install-Skill($templateRel, $skillName) {
     $dir = Join-Path $skillsRoot $skillName
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
     $content = (Get-Content $templateFp -Raw).Replace('__REPO_DIR__', $repoFwd)
-    Set-Content -Path (Join-Path $dir 'SKILL.md') -Value $content -Encoding UTF8
+    # Write UTF-8 WITHOUT BOM — Claude Code's YAML frontmatter parser rejects
+    # files that start with a BOM (treats the BOM bytes as part of the first
+    # line, so the `---` delimiter no longer matches).
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText((Join-Path $dir 'SKILL.md'), $content, $utf8NoBom)
     Write-Host "Skill /$skillName installed at: $dir"
 }
 

@@ -1,23 +1,42 @@
 ---
 name: choose-voice
-description: Choose or list a TTS voice for ListenClaude (audio readback of Claude responses). Supports system voices (macOS say / Windows SAPI), Piper offline models, and ElevenLabs cloud voices. Use whenever the user asks to "pick a voice", "change voice", "list voices", "use voice <id>", or "browse ElevenLabs library".
+description: Choose or list a TTS voice for ListenClaude (audio readback of Claude responses). Supports Edge TTS (free Microsoft neural voices), system voices, Piper offline models, and ElevenLabs cloud voices. Use whenever the user asks to "pick a voice", "change voice", "list voices", "use voice <id>", or "browse voice library".
 ---
 
 # choose-voice — set or browse the TTS voice for ListenClaude
 
-ListenClaude's read-aloud uses one of three engines (system / piper / elevenlabs). This skill helps the user pick a voice from any of them and writes the choice to `.env` so it takes effect on the next response.
+ListenClaude's read-aloud uses one of four engines: **edge** (free Microsoft neural, default), **system** (OS built-in), **piper** (local offline), **elevenlabs** (paid cloud). This skill helps the user pick a voice and writes the choice to `.env` so it takes effect on the next response.
 
 ## How to interpret the user's request
 
 | User intent | Action |
 |---|---|
+| "list edge voices" / "Chinese voices" | Run `edge-tts --list-voices` (filter `zh` or `en`). |
 | "list system voices" / "macOS voices" / "SAPI voices" | List built-in OS voices (see below). |
-| "open ElevenLabs library" / "browse voices" | Tell the user to open https://elevenlabs.io/app/voice-library, audition, and copy a voice_id. |
-| "list my ElevenLabs voices" | Call ElevenLabs API to list voices saved in their account. Requires `ELEVENLABS_API_KEY` in `.env`. |
-| "use voice <id>" / "set voice to <name>" / "switch to <id>" | Run `set-voice.{ps1,sh}` with the voice ID. Detect engine from format: hex-ish 20-char string = elevenlabs; `.onnx` or `zh_CN-*` = piper; otherwise system. Pass the engine as second arg when changing. |
+| "list piper voices" | List `.onnx` files under PIPER_VOICES_DIR. Direct user to https://rhasspy.github.io/piper-samples/ for downloads. |
+| "browse ElevenLabs" | Tell user to open https://elevenlabs.io/app/voice-library, audition, and copy a voice_id. |
+| "list my ElevenLabs voices" | Call ElevenLabs API (`/v1/voices`). Requires `ELEVENLABS_API_KEY` in `.env`. |
+| "use voice <id>" / "switch to <id>" | Run `set-voice.{ps1,sh}`. Auto-detect engine from format. |
 | "what voice am I using" / "current voice" | Read TTS_VOICE and TTS_ENGINE from `__REPO_DIR__/.env`. |
 
+## Engine auto-detection from voice ID format
+
+When the user says "use voice X" without specifying the engine, infer it:
+
+| Pattern | Engine |
+|---|---|
+| Matches `^(zh|en|ja|...)-[A-Z]{2}-[A-Za-z]+Neural$` (e.g. `zh-TW-HsiaoChenNeural`) | edge |
+| Ends in `.onnx` or matches `^(zh_CN|en_US)-` (e.g. `zh_CN-huayan-medium`) | piper |
+| 20-char alphanumeric ID (e.g. `21m00Tcm4TlvDq8ikWAM`) | elevenlabs |
+| Anything else (display name like `Mei-Jia`, `Microsoft Yating Desktop`) | system |
+
 ## Listing voices
+
+### Edge TTS (recommended free)
+```bash
+.venv/bin/edge-tts --list-voices | grep zh   # or en, ja, etc.
+```
+Popular Chinese voices: `zh-TW-HsiaoChenNeural` (TW 女), `zh-TW-YunJheNeural` (TW 男), `zh-CN-XiaoxiaoNeural` (CN 女), `zh-CN-YunyangNeural` (CN 男).
 
 ### System (macOS)
 ```
@@ -29,16 +48,13 @@ say -v '?' | grep -E 'zh|en'
 powershell "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).GetInstalledVoices().VoiceInfo | Select Name,Culture"
 ```
 
-### Piper
-List files in `~/.cache/piper-voices/*.onnx` (or `$PIPER_VOICES_DIR`). Direct user to https://rhasspy.github.io/piper-samples/ for previews / downloads.
-
-### ElevenLabs (user's saved voices)
+### ElevenLabs (user's saved)
 ```bash
-curl -s -H "xi-api-key: $ELEVENLABS_API_KEY" https://api.elevenlabs.io/v1/voices | jq '.voices[] | {voice_id, name, labels}'
+curl -s -H "xi-api-key: $ELEVENLABS_API_KEY" https://api.elevenlabs.io/v1/voices | jq '.voices[] | {voice_id, name}'
 ```
 
 ### ElevenLabs (community library)
-Tell the user to open https://elevenlabs.io/app/voice-library in their browser — that page has live preview which an API call cannot match.
+Open https://elevenlabs.io/app/voice-library in a browser — has live preview the API doesn't match.
 
 ## Setting the voice
 
@@ -52,6 +68,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "__REPO_DIR__\scripts\set-vo
 bash "__REPO_DIR__/scripts/set-voice.sh" <id> [<engine>]
 ```
 
-`<engine>` is `system`, `piper`, or `elevenlabs`. Omit if the engine is already configured correctly.
+`<engine>` is `edge`, `system`, `piper`, or `elevenlabs`. Omit if the engine is already configured correctly.
 
 After setting, echo back the new `TTS_ENGINE` and `TTS_VOICE` values (the script prints them). No restart needed — the next Claude response will use the new voice.
