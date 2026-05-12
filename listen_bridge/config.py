@@ -23,10 +23,12 @@ TTS_ENGINE = os.getenv("TTS_ENGINE", "system").lower()
 TTS_VOICE = os.getenv("TTS_VOICE", "")
 
 # Reading mode:
-#   "full"  — read the entire last assistant message
-#   "first" — read only the first paragraph
-#   "summary" — heuristic summary (headers + first sentence of each paragraph)
-TTS_MODE = os.getenv("TTS_MODE", "first")
+#   "progress" (default) — opening sentence + first ~4 bullet items, the
+#                          "what was done this turn" view.
+#   "full"      — read the entire last assistant message.
+#   "first"     — only the first paragraph.
+#   "summary"   — every paragraph's first sentence + headings.
+TTS_MODE = os.getenv("TTS_MODE", "progress")
 
 # Skip TTS if message has fewer words than this (avoid reading "ok").
 TTS_MIN_WORDS = int(os.getenv("TTS_MIN_WORDS", "20"))

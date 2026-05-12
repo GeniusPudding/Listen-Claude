@@ -19,6 +19,63 @@ def first_paragraph(text: str) -> str:
     return paras[0] if paras else ""
 
 
+_BULLET_RE = re.compile(r"^\s*(?:[-*•·]|\d+[.)])\s+")
+_HEADER_RE = re.compile(r"^\s*#{1,6}\s+")
+_TABLE_RE  = re.compile(r"^\s*\|")
+
+
+def progress_summary(text: str, max_bullets: int = 4) -> str:
+    """What-was-done style summary: short opening + first few bullets.
+
+    Designed for spoken playback. Claude responses in this project tend
+    to open with a short status sentence ("推上了 …") followed by a
+    bullet list of concrete changes. Read both so the listener knows
+    what the turn accomplished, not just that something happened.
+    """
+    intro = ""
+    bullets: list[str] = []
+    in_code = False
+
+    for raw in text.split("\n"):
+        line = raw.strip()
+        if raw.lstrip().startswith("```"):
+            in_code = not in_code
+            continue
+        if in_code or not line:
+            continue
+        if _HEADER_RE.match(line):
+            if not intro:
+                intro = _HEADER_RE.sub("", line)
+            continue
+        if _BULLET_RE.match(line):
+            if len(bullets) < max_bullets:
+                content = _BULLET_RE.sub("", line)
+                content = re.sub(r"`([^`]+)`", r"\1", content)
+                content = re.sub(r"\*\*([^*]+)\*\*", r"\1", content)
+                bullets.append(content)
+            continue
+        if _TABLE_RE.match(line):
+            continue
+        if not intro:
+            sents = split_sentences(line)
+            if sents:
+                intro = sents[0]
+
+    def _clean(s: str) -> str:
+        s = re.sub(r"`([^`]+)`", r"\1", s)
+        s = re.sub(r"\*\*([^*]+)\*\*", r"\1", s)
+        return s.rstrip("。!?.!?")
+
+    parts = []
+    if intro:
+        parts.append(_clean(intro))
+    if bullets:
+        parts.append("要點:" + "、".join(_clean(b) for b in bullets))
+    if parts:
+        return "。".join(parts)
+    return first_paragraph(text)
+
+
 def heuristic_summary(text: str) -> str:
     """Pick headings (lines starting with #) and the first sentence of each
     paragraph; skip code blocks entirely."""
@@ -53,6 +110,8 @@ def prepare_text(text: str, mode: str, max_chars: int) -> str:
         result = first_paragraph(text)
     elif mode == "summary":
         result = heuristic_summary(text)
+    elif mode == "progress":
+        result = progress_summary(text)
     else:
         result = text
     if len(result) > max_chars:
