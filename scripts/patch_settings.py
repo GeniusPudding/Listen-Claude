@@ -13,7 +13,9 @@ import json
 import os
 import sys
 
-MARKER = "scripts/on_stop"
+# Match any past or present ListenClaude hook entry. Keep adding to this list
+# if the entry path ever changes again.
+MARKERS = ("stop_hook_entry", "scripts/on_stop")
 
 
 def strip_ours(hook_groups):
@@ -23,7 +25,7 @@ def strip_ours(hook_groups):
     for group in hook_groups:
         kept = [
             h for h in group.get("hooks", [])
-            if MARKER not in (h.get("command") or "")
+            if not any(m in (h.get("command") or "") for m in MARKERS)
         ]
         if kept:
             out.append({**group, "hooks": kept})
@@ -31,14 +33,20 @@ def strip_ours(hook_groups):
 
 
 def build_command(platform: str, repo_dir: str) -> str:
+    """Build the Stop-hook command.
+
+    Invokes the venv's python.exe directly (no PowerShell / bash wrapper)
+    so Claude Code's stdin bytes reach Python without re-encoding.
+    """
     repo_fwd = repo_dir.replace("\\", "/").rstrip("/")
+    entry = f"{repo_fwd}/scripts/stop_hook_entry.py"
     if platform == "win":
-        path = f"{repo_fwd}/scripts/on_stop.ps1"
-        return f'powershell -NoProfile -ExecutionPolicy Bypass -File "{path}"'
-    if platform == "unix":
-        path = f"{repo_fwd}/scripts/on_stop.sh"
-        return f'bash "{path}"'
-    raise SystemExit(f"unknown platform: {platform} (expected win|unix)")
+        py = f"{repo_fwd}/.venv/Scripts/python.exe"
+    elif platform == "unix":
+        py = f"{repo_fwd}/.venv/bin/python"
+    else:
+        raise SystemExit(f"unknown platform: {platform} (expected win|unix)")
+    return f'"{py}" "{entry}"'
 
 
 def main() -> None:
