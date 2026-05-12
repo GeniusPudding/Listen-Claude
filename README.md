@@ -14,20 +14,34 @@ Companion to [Kaikou-Claude](https://github.com/GeniusPudding/Kaikou-Claude) (vo
 - **Configurable reading mode** — full text, first paragraph only, or heuristic summary.
 - **Skip-short threshold** — won't read trivial "ok" responses.
 
+## Platform support
+
+| Platform | Default engine | Status | Notes |
+|----------|----------------|--------|-------|
+| Windows  | Edge TTS | **Stable** | SAPI also available via `system` engine. |
+| macOS    | Edge TTS | **Stable** | `say` voices available via `system`. |
+| Linux    | Edge TTS | **Stable** | Install `mpg123` for MP3 playback (Edge / ElevenLabs). |
+
 ## Install
+
+One command on every platform (clone + run install):
 
 ```bash
 git clone https://github.com/GeniusPudding/ListenClaude.git
 cd ListenClaude
-
-# Windows
-.\install.ps1
-
-# macOS / Linux
-./install.sh
+.\install.ps1   # Windows
+./install.sh    # macOS / Linux
 ```
 
-The installer creates a `.venv`, installs dependencies, copies `.env`, and registers a `Stop` hook in `~/.claude/settings.json`.
+The installer:
+
+1. Creates a local `.venv` and installs Python deps (including `edge-tts`).
+2. Writes a default `.env` (only if missing).
+3. Registers a `Stop` hook in `~/.claude/settings.json` that invokes the venv Python directly (no shell wrapper, preserves stdin bytes).
+4. Installs `/listen` and `/choose-voice` skills to `~/.claude/skills/`.
+5. Optionally downloads a Piper voice if `PIPER_VOICE` env var is set during install.
+
+Idempotent — re-run any time to upgrade or repair.
 
 ## Choosing a voice
 

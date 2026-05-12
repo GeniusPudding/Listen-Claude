@@ -14,20 +14,34 @@
 - **可調朗讀模式** — 全文 / 只念第一段 / 重點摘要。
 - **跳過廢話** — 太短的回應（如 "ok"）不念。
 
+## 平台支援
+
+| 平台 | 預設引擎 | 狀態 | 備註 |
+|------|---------|------|------|
+| Windows | Edge TTS | **穩定** | 也可用 `system` 引擎走 SAPI |
+| macOS | Edge TTS | **穩定** | 也可用 `system` 引擎走 `say` |
+| Linux | Edge TTS | **穩定** | MP3 播放需裝 `mpg123`（edge / elevenlabs 引擎用） |
+
 ## 安裝
+
+每個平台都一行（clone + 跑 install）：
 
 ```bash
 git clone https://github.com/GeniusPudding/ListenClaude.git
 cd ListenClaude
-
-# Windows
-.\install.ps1
-
-# macOS / Linux
-./install.sh
+.\install.ps1   # Windows
+./install.sh    # macOS / Linux
 ```
 
-安裝腳本會建 `.venv`、裝依賴、複製 `.env`、把 `Stop` hook 註冊到 `~/.claude/settings.json`。
+安裝腳本：
+
+1. 建 `.venv` 並裝 Python 依賴（含 `edge-tts`）。
+2. 寫一份預設 `.env`（若不存在）。
+3. 把 `Stop` hook 註冊到 `~/.claude/settings.json`,直接呼叫 venv Python（不經過 shell wrapper,避免 stdin 編碼被改）。
+4. 把 `/listen` 和 `/choose-voice` skill 裝到 `~/.claude/skills/`。
+5. 若安裝時設了 `PIPER_VOICE` 環境變數,順便下載 Piper 模型。
+
+冪等 — 隨時重跑都安全。
 
 ## 挑聲音
 
