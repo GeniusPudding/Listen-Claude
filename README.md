@@ -68,6 +68,26 @@ TTS_VOICE=Mei-Jia
 
 Not built in yet — open a PR or fork to add. Their [Voice Library](https://elevenlabs.io/app/voice-library) has thousands of community voices with online preview.
 
+## Toggle (skill / script)
+
+After install, the `/listen` skill is registered with Claude Code. Use it from any Claude session:
+
+```
+/listen          → toggle current state
+/listen on       → enable
+/listen off      → disable
+/listen status   → report state
+```
+
+You can also run the script directly:
+
+```bash
+.\scripts\toggle.ps1 [on|off|status]   # Windows
+bash scripts/toggle.sh [on|off|status] # macOS / Linux
+```
+
+The toggle uses a marker file (`$TMPDIR/listen-claude.disabled`), so changes take effect immediately on the next Claude response — no daemon restart, no Claude restart needed.
+
 ## Configuration
 
 Edit `.env` in the repo root.

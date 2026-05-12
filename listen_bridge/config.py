@@ -40,6 +40,19 @@ TTS_RATE = int(os.getenv("TTS_RATE", "200"))
 # Master switch — set to "0" to disable TTS without uninstalling.
 TTS_ENABLED = os.getenv("TTS_ENABLED", "1") == "1"
 
+# Runtime toggle marker — if this file exists, TTS is disabled regardless
+# of TTS_ENABLED. Created/removed by scripts/toggle.{ps1,sh} for fast on/off
+# without editing .env.
+TOGGLE_MARKER = os.path.join(tempfile.gettempdir(), "listen-claude.disabled")
+
+
+def is_enabled() -> bool:
+    if not TTS_ENABLED:
+        return False
+    if os.path.exists(TOGGLE_MARKER):
+        return False
+    return True
+
 # Piper-specific: directory holding .onnx and .onnx.json voice files.
 PIPER_VOICES_DIR = os.getenv(
     "PIPER_VOICES_DIR",

@@ -68,6 +68,26 @@ TTS_VOICE=Mei-Jia
 
 還沒內建,歡迎 PR。[Voice Library](https://elevenlabs.io/app/voice-library) 有上千種社群聲音可線上試聽。
 
+## 開關 (skill / 腳本)
+
+安裝後 `/listen` skill 已註冊到 Claude Code。任何 session 都能用：
+
+```
+/listen          → 切換目前狀態
+/listen on       → 開啟
+/listen off      → 關閉
+/listen status   → 查狀態
+```
+
+也可以直接跑腳本：
+
+```bash
+.\scripts\toggle.ps1 [on|off|status]   # Windows
+bash scripts/toggle.sh [on|off|status] # macOS / Linux
+```
+
+切換用 marker 檔(`$TMPDIR/listen-claude.disabled`)實現,下一次 Claude 回應立即生效,不用重啟任何東西。
+
 ## 設定
 
 寫在 repo 根目錄的 `.env`。

@@ -43,9 +43,18 @@ if [[ ! -f "$env_file" ]]; then
 fi
 
 # 4. Register Stop hook.
-chmod +x "$repo_dir/scripts/on_stop.sh" 2>/dev/null || true
+chmod +x "$repo_dir/scripts/on_stop.sh" "$repo_dir/scripts/toggle.sh" 2>/dev/null || true
 mkdir -p "$(dirname "$settings_file")"
 "$venv_python" "$patch_script" "$settings_file" install unix "$repo_dir"
+
+# 5. Install /listen skill to ~/.claude/skills/listen/SKILL.md.
+skill_dir="$HOME/.claude/skills/listen"
+template="$repo_dir/skill/SKILL.md.template"
+if [[ -f "$template" ]]; then
+    mkdir -p "$skill_dir"
+    sed "s|__REPO_DIR__|$repo_dir|g" "$template" > "$skill_dir/SKILL.md"
+    echo "Skill /listen installed at: $skill_dir"
+fi
 
 echo
 echo "=== Done ==="

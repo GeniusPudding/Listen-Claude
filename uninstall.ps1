@@ -30,5 +30,12 @@ if ((Test-Path $patchScript) -and (Test-Path $settingsFile)) {
     Write-Host 'patch_settings.py or settings.json not found; skipping'
 }
 
+# Remove the /listen skill if present.
+$skillDir = Join-Path $HOME '.claude\skills\listen'
+if (Test-Path $skillDir) {
+    Remove-Item -Recurse -Force $skillDir
+    Write-Host "Removed /listen skill"
+}
+
 Write-Host ''
 Write-Host 'Done. Repo files kept; delete the directory manually for a clean wipe.'

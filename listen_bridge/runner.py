@@ -21,7 +21,7 @@ def _log(msg: str) -> None:
 
 
 def main() -> int:
-    if not config.TTS_ENABLED:
+    if not config.is_enabled():
         return 0
 
     try:

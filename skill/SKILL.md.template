@@ -1,0 +1,33 @@
+---
+name: listen
+description: Toggle ListenClaude TTS readback of Claude responses. Accepts arg `on`, `off`, `status`, or no arg to toggle. Use whenever the user asks to turn voice readback on/off, mute/unmute Claude, or check whether audio replies are active.
+---
+
+# Listen — toggle Claude voice readback
+
+This skill controls ListenClaude, a TTS plugin that reads Claude's responses aloud through the system speakers (triggered by the Stop hook).
+
+The user's intent is encoded in the argument:
+
+| Arg | Action |
+|-----|--------|
+| (none) | toggle current state |
+| `on` | force enable |
+| `off` | force disable |
+| `status` | report state without changing |
+
+## How to invoke
+
+Run the platform-appropriate toggle script with the arg, then report the new state in one short line.
+
+**Windows:**
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File "__REPO_DIR__\scripts\toggle.ps1" __ACTION__
+```
+
+**macOS / Linux:**
+```
+bash "__REPO_DIR__/scripts/toggle.sh" __ACTION__
+```
+
+Replace `__ACTION__` with the user's argument (omit if no arg given). The script prints `ListenClaude TTS: ON` or `ListenClaude TTS: OFF`. Echo that result back to the user — nothing more.
