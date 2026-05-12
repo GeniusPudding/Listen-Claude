@@ -127,9 +127,11 @@ bash scripts/set-voice.sh zh_CN-huayan-medium piper   # macOS / Linux
    ELEVENLABS_API_KEY=<你的金鑰>
    ```
 
-## 開關 (skill / 腳本)
+## 控制 (skill / 腳本)
 
-安裝後 `/listen` skill 已註冊到 Claude Code。任何 session 都能用：
+安裝後 `/listen` skill 已註冊到 Claude Code,同時管 **開關** 跟 **朗讀詳細度**。
+
+**開關：**
 
 ```
 /listen          → 切換目前狀態
@@ -138,14 +140,24 @@ bash scripts/set-voice.sh zh_CN-huayan-medium piper   # macOS / Linux
 /listen status   → 查狀態
 ```
 
+**朗讀模式**（簡答 / 詳答隨時切換）：
+
+```
+/listen brief     → 只念開頭一段（TTS_MODE=first）
+/listen progress  → 開頭 + 前 ~4 個 bullet（預設）
+/listen summary   → 每段第一句 + 標題
+/listen detailed  → 整則回應全念（TTS_MODE=full）
+/listen mode      → 印出目前模式
+```
+
 也可以直接跑腳本：
 
 ```bash
-.\scripts\toggle.ps1 [on|off|status]   # Windows
-bash scripts/toggle.sh [on|off|status] # macOS / Linux
+.\scripts\toggle.ps1  [on|off|status|brief|progress|summary|detailed|mode]   # Windows
+bash scripts/toggle.sh [on|off|status|brief|progress|summary|detailed|mode]  # macOS / Linux
 ```
 
-切換用 marker 檔(`$TMPDIR/listen-claude.disabled`)實現,下一次 Claude 回應立即生效,不用重啟任何東西。
+開關用 marker 檔 (`$TMPDIR/listen-claude.disabled`),模式則寫到 `.env`。兩者都在下一次 Claude 回應立即生效,不用重啟。
 
 ## 設定
 
@@ -154,9 +166,9 @@ bash scripts/toggle.sh [on|off|status] # macOS / Linux
 | 變數 | 預設 | 說明 |
 |------|------|------|
 | `TTS_ENABLED` | `1` | `0` 暫停 TTS（不用 uninstall） |
-| `TTS_ENGINE` | `system` | `system` 或 `piper` |
-| `TTS_VOICE` |（空） | 引擎對應的 voice ID |
-| `TTS_MODE` | `first` | `full` / `first` / `summary` |
+| `TTS_ENGINE` | `edge` | `edge` / `system` / `piper` / `elevenlabs` |
+| `TTS_VOICE` | `zh-TW-HsiaoChenNeural` | 引擎對應的 voice ID |
+| `TTS_MODE` | `progress` | `progress`（開頭 + bullets）/ `first` / `summary` / `full`；可用 `/listen <mode>` 即時切換 |
 | `TTS_MIN_WORDS` | `20` | 短於此字數的回應不念 |
 | `TTS_MAX_CHARS` | `500` | 截斷過長回應 |
 | `TTS_RATE` | `200` | 大略 wpm |

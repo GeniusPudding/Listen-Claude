@@ -1,16 +1,66 @@
 #!/usr/bin/env bash
-# Toggle ListenClaude TTS on/off (no daemon restart needed).
+# Control ListenClaude TTS: on/off + reading mode.
 # Usage:
-#   bash scripts/toggle.sh         toggle current state
-#   bash scripts/toggle.sh on      force on
-#   bash scripts/toggle.sh off     force off
-#   bash scripts/toggle.sh status  print state and exit
+#   bash scripts/toggle.sh                  toggle current on/off state
+#   bash scripts/toggle.sh on               force on
+#   bash scripts/toggle.sh off              force off
+#   bash scripts/toggle.sh status           print on/off state
+#   bash scripts/toggle.sh brief            short reading (TTS_MODE=first)
+#   bash scripts/toggle.sh progress         intro + bullets (TTS_MODE=progress)
+#   bash scripts/toggle.sh summary          first sentence per paragraph
+#   bash scripts/toggle.sh detailed         read everything (TTS_MODE=full)
+#   bash scripts/toggle.sh mode             print current mode
 
 set -u
 
+repo_dir="$(cd "$(dirname "$0")/.." && pwd)"
 marker="${TMPDIR:-/tmp}/listen-claude.disabled"
+env_file="$repo_dir/.env"
 action="${1:-toggle}"
+action="$(echo "$action" | tr '[:upper:]' '[:lower:]')"
 
+# Aliases that map user-friendly words to TTS_MODE values.
+case "$action" in
+    brief|short)    action="first" ;;
+    detailed|long)  action="full"  ;;
+esac
+
+set_mode() {
+    local mode="$1"
+    if [[ ! -f "$env_file" && -f "$repo_dir/.env.example" ]]; then
+        cp "$repo_dir/.env.example" "$env_file"
+    fi
+    if [[ -f "$env_file" ]]; then
+        local tmp; tmp="$(mktemp)"
+        grep -v '^[[:space:]]*TTS_MODE[[:space:]]*=' "$env_file" > "$tmp" || true
+        printf 'TTS_MODE=%s\n' "$mode" >> "$tmp"
+        mv "$tmp" "$env_file"
+    fi
+    echo "ListenClaude mode: $mode"
+}
+
+get_mode() {
+    if [[ -f "$env_file" ]]; then
+        local line
+        line="$(grep -E '^[[:space:]]*TTS_MODE[[:space:]]*=' "$env_file" | tail -n1)"
+        if [[ -n "$line" ]]; then
+            echo "${line#*=}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+            return
+        fi
+    fi
+    echo "progress (default)"
+}
+
+case "$action" in
+    first|progress|summary|full)
+        set_mode "$action"; exit 0
+        ;;
+    mode)
+        echo "ListenClaude mode: $(get_mode)"; exit 0
+        ;;
+esac
+
+# on/off/status/toggle.
 exists=0
 [[ -f "$marker" ]] && exists=1
 

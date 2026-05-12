@@ -1,16 +1,60 @@
-# Toggle ListenClaude TTS on/off (no daemon restart needed).
+# Control ListenClaude TTS: on/off + reading mode.
 # Usage:
-#   .\scripts\toggle.ps1        toggle current state
-#   .\scripts\toggle.ps1 on     force on
-#   .\scripts\toggle.ps1 off    force off
-#   .\scripts\toggle.ps1 status print state and exit
+#   .\scripts\toggle.ps1                  toggle current on/off state
+#   .\scripts\toggle.ps1 on               force on
+#   .\scripts\toggle.ps1 off              force off
+#   .\scripts\toggle.ps1 status           print on/off state
+#   .\scripts\toggle.ps1 brief            short reading (TTS_MODE=first)
+#   .\scripts\toggle.ps1 progress         intro + bullets (TTS_MODE=progress)
+#   .\scripts\toggle.ps1 summary          first sentence per paragraph
+#   .\scripts\toggle.ps1 detailed         read everything (TTS_MODE=full)
+#   .\scripts\toggle.ps1 mode             print current mode
 
 param([string]$Action = 'toggle')
 
-$marker = Join-Path $env:TEMP 'listen-claude.disabled'
-$exists = Test-Path $marker
+$repoDir = Split-Path -Parent $PSScriptRoot
+$marker  = Join-Path $env:TEMP 'listen-claude.disabled'
+$envFile = Join-Path $repoDir '.env'
 
-switch ($Action.ToLower()) {
+# Aliases that map user-friendly words to TTS_MODE values.
+$aliases = @{
+    'brief'    = 'first'
+    'short'    = 'first'
+    'detailed' = 'full'
+    'long'     = 'full'
+}
+$validModes = @('first', 'progress', 'summary', 'full')
+
+$action = $Action.ToLower()
+if ($aliases.ContainsKey($action)) { $action = $aliases[$action] }
+
+function Set-Mode($mode) {
+    if (-not (Test-Path $envFile)) {
+        Copy-Item (Join-Path $repoDir '.env.example') $envFile -ErrorAction SilentlyContinue
+    }
+    if (Test-Path $envFile) {
+        $kept = @(Get-Content $envFile) | Where-Object { $_ -notmatch '^\s*TTS_MODE\s*=' }
+        $kept + "TTS_MODE=$mode" | Set-Content -Path $envFile -Encoding UTF8
+    }
+    Write-Host "ListenClaude mode: $mode"
+}
+
+function Get-Mode {
+    if (Test-Path $envFile) {
+        foreach ($line in Get-Content $envFile) {
+            if ($line -match '^\s*TTS_MODE\s*=\s*(.+?)\s*$') { return $matches[1] }
+        }
+    }
+    return 'progress (default)'
+}
+
+# Mode setters.
+if ($validModes -contains $action) { Set-Mode $action; exit 0 }
+if ($action -eq 'mode')             { Write-Host "ListenClaude mode: $(Get-Mode)"; exit 0 }
+
+# on/off/status/toggle.
+$exists = Test-Path $marker
+switch ($action) {
     'on'     { if ($exists) { Remove-Item $marker -Force }; $state = 'ON' }
     'off'    { if (-not $exists) { New-Item -ItemType File -Path $marker -Force | Out-Null }; $state = 'OFF' }
     'status' { $state = if ($exists) { 'OFF' } else { 'ON' } }
@@ -19,5 +63,4 @@ switch ($Action.ToLower()) {
         else         { New-Item -ItemType File -Path $marker -Force | Out-Null; $state = 'OFF' }
     }
 }
-
 Write-Host "ListenClaude TTS: $state"

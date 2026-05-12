@@ -127,9 +127,11 @@ Audition voices: [Piper samples](https://rhasspy.github.io/piper-samples/). Full
    ELEVENLABS_API_KEY=<your_key>
    ```
 
-## Toggle (skill / script)
+## Control (skill / script)
 
-After install, the `/listen` skill is registered with Claude Code. Use it from any Claude session:
+After install, the `/listen` skill is registered with Claude Code. It controls both **on/off** and **how much** of each response is read.
+
+**On/off:**
 
 ```
 /listen          → toggle current state
@@ -138,14 +140,24 @@ After install, the `/listen` skill is registered with Claude Code. Use it from a
 /listen status   → report state
 ```
 
+**Reading mode** (switch between brief / detailed at any time):
+
+```
+/listen brief     → read only the opening paragraph (TTS_MODE=first)
+/listen progress  → opening + first ~4 bullets (default)
+/listen summary   → first sentence per paragraph + headings
+/listen detailed  → read the entire response (TTS_MODE=full)
+/listen mode      → report current mode
+```
+
 You can also run the script directly:
 
 ```bash
-.\scripts\toggle.ps1 [on|off|status]   # Windows
-bash scripts/toggle.sh [on|off|status] # macOS / Linux
+.\scripts\toggle.ps1  [on|off|status|brief|progress|summary|detailed|mode]   # Windows
+bash scripts/toggle.sh [on|off|status|brief|progress|summary|detailed|mode]  # macOS / Linux
 ```
 
-The toggle uses a marker file (`$TMPDIR/listen-claude.disabled`), so changes take effect immediately on the next Claude response — no daemon restart, no Claude restart needed.
+The on/off toggle uses a marker file (`$TMPDIR/listen-claude.disabled`); mode changes are written to `.env`. Either way, the next Claude response picks up the change — no daemon restart, no Claude restart needed.
 
 ## Configuration
 
@@ -154,9 +166,9 @@ Edit `.env` in the repo root.
 | Variable | Default | Notes |
 |----------|---------|-------|
 | `TTS_ENABLED` | `1` | `0` disables without uninstalling. |
-| `TTS_ENGINE` | `system` | `system` or `piper`. |
-| `TTS_VOICE` | (none) | Engine-specific voice ID. |
-| `TTS_MODE` | `first` | `full`, `first`, or `summary`. |
+| `TTS_ENGINE` | `edge` | `edge`, `system`, `piper`, or `elevenlabs`. |
+| `TTS_VOICE` | `zh-TW-HsiaoChenNeural` | Engine-specific voice ID. |
+| `TTS_MODE` | `progress` | `progress` (intro + bullets), `first`, `summary`, or `full`. Switchable at runtime via `/listen <mode>`. |
 | `TTS_MIN_WORDS` | `20` | Skip TTS if response shorter than this. |
 | `TTS_MAX_CHARS` | `500` | Truncate longer responses. |
 | `TTS_RATE` | `200` | Rough words-per-minute. |
