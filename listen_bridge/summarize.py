@@ -70,7 +70,10 @@ def progress_summary(text: str, max_bullets: int = 4) -> str:
     if intro:
         parts.append(_clean(intro))
     if bullets:
-        parts.append("要點:" + "、".join(_clean(b) for b in bullets))
+        # Join bullets with "。" so each item becomes a full sentence — gives
+        # Edge / system TTS a clear falling intonation per bullet instead of
+        # racing through them like a comma-separated enumeration.
+        parts.append("要點:" + "。".join(_clean(b) for b in bullets))
     if parts:
         return "。".join(parts)
     return first_paragraph(text)
