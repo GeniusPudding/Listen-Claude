@@ -9,6 +9,7 @@ import json
 import os
 import os.path
 import sys
+import threading
 import time
 
 from . import config, summarize, transcript, tts
@@ -115,6 +116,22 @@ def main() -> int:
         _log("timed out waiting in TTS queue; dropping")
         return 0
 
+    # Heartbeat: refresh lock mtime every few seconds so concurrent waiters
+    # don't consider it stale during long playback. Without this, a TTS
+    # session longer than LOCK_STALE_SEC would let the next queued hook
+    # barge in and start speaking on top of us.
+    stop_beat = threading.Event()
+
+    def _heartbeat() -> None:
+        while not stop_beat.wait(5.0):
+            try:
+                os.utime(config.LOCK_PATH, None)
+            except OSError:
+                return
+
+    beat = threading.Thread(target=_heartbeat, daemon=True)
+    beat.start()
+
     try:
         spoken = summarize.prepare_text(text, config.TTS_MODE, config.TTS_MAX_CHARS)
         if config.ANNOUNCE_PROJECT:
@@ -124,6 +141,8 @@ def main() -> int:
         _log(f"speak ({config.TTS_ENGINE} / {config.TTS_VOICE or 'default'}): {spoken[:80]}")
         tts.speak(spoken)
     finally:
+        stop_beat.set()
+        beat.join(timeout=1.0)
         _release_lock()
     return 0
 
